@@ -44,7 +44,7 @@ export class YoutubeService {
         quality: 0,
       },
       output,
-      cookies: this.configService.get<string>('YT_COOKIES'),
+      cookies: this.configService.get<string>('YT_COOKIES_FILE'),
       headers: HEADERS,
     });
     this.logger.debug(
