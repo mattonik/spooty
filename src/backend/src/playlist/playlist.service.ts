@@ -196,6 +196,17 @@ export class PlaylistService {
     this.io.emit(WsPlaylistOperation.Update, dbPlaylist);
   }
 
+  async stopProcessing(id: number): Promise<void> {
+    const playlist = await this.findOne(id);
+    if (!playlist) {
+      return;
+    }
+    if (playlist.active) {
+      await this.update(id, { active: false });
+    }
+    await this.trackService.stopByPlaylist(id);
+  }
+
   async retryFailedOfPlaylist(id: number): Promise<void> {
     const tracks = await this.trackService.getAllByPlaylist(id);
     for (const track of tracks) {

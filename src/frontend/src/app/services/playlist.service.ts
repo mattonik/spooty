@@ -141,6 +141,10 @@ export class PlaylistService {
     this.http.get<void>(`${ENDPOINT}/retry/${id}`).subscribe();
   }
 
+  stop(id: number): void {
+    this.http.post<void>(`${ENDPOINT}/stop/${id}`, {}).subscribe();
+  }
+
   setActive(id: number, active: boolean): void {
     this.http.put<void>(`${ENDPOINT}/${id}`, {active}).subscribe();
   }

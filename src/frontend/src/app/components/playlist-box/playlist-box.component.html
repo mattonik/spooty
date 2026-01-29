@@ -24,6 +24,10 @@
         ></i>
         <i>&nbsp;</i>
       </ng-container>
+      <i *ngIf="(trackCompletedCount$ | async) !== (trackCount$ | async)"
+         class="fa-solid fa-stop is-clickable hover-icon"
+         title="Stop all pending downloads in this playlist"
+         (click)="stop(playlist.id)"></i>&nbsp;
       <i class="fa-solid fa-repeat is-clickable hover-icon" title="Retry download failed tracks" (click)="retryFailed(playlist.id)"></i>&nbsp;
       <i class="fa-solid fa-xmark is-clickable hover-icon" title="Remove playlist from list" (click)="delete(playlist.id)"></i>&nbsp;
       <i *ngIf="playlist.active" class="fa-solid fa-toggle-on hover-icon-reversed"></i>&nbsp;

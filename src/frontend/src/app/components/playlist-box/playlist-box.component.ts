@@ -57,6 +57,10 @@ export class PlaylistBoxComponent {
     this.service.retryFailed(id);
   }
 
+  stop(id: number): void {
+    this.service.stop(id);
+  }
+
   toggleActive(id: number, currentActive: boolean): void {
     this.service.setActive(id, !currentActive)
   }

@@ -19,6 +19,12 @@ enum WsTrackOperation {
   Delete = 'trackDelete',
 }
 const FORCED_ERROR_PREFIX = 'Forced failure by user';
+const STOPPED_ERROR_PREFIX = 'Stopped by user';
+
+const isUserStoppedError = (error?: string): boolean =>
+  typeof error === 'string' &&
+  (error.startsWith(FORCED_ERROR_PREFIX) ||
+    error.startsWith(STOPPED_ERROR_PREFIX));
 
 @WebSocketGateway()
 @Injectable()
@@ -171,11 +177,7 @@ export class TrackService {
             return;
           }
           const latest = await this.get(track.id);
-          if (
-            latest?.status === TrackStatusEnum.Error &&
-            typeof latest?.error === 'string' &&
-            latest.error.startsWith(FORCED_ERROR_PREFIX)
-          ) {
+          if (latest?.status === TrackStatusEnum.Error && isUserStoppedError(latest?.error)) {
             return;
           }
           lastProgress = rounded;
@@ -209,11 +211,7 @@ export class TrackService {
       ...(error ? { error } : {}),
     };
     const latest = await this.get(track.id);
-    if (
-      latest?.status === TrackStatusEnum.Error &&
-      typeof latest?.error === 'string' &&
-      latest.error.startsWith(FORCED_ERROR_PREFIX)
-    ) {
+    if (latest?.status === TrackStatusEnum.Error && isUserStoppedError(latest?.error)) {
       return;
     }
     await this.update(track.id, updatedTrack);
@@ -252,5 +250,22 @@ export class TrackService {
       status: TrackStatusEnum.Error,
       error: `${FORCED_ERROR_PREFIX} at ${new Date().toISOString()}`,
     });
+  }
+
+  async stopByPlaylist(playlistId: number): Promise<void> {
+    const tracks = await this.getAllByPlaylist(playlistId);
+    for (const track of tracks) {
+      if (track.status === TrackStatusEnum.Completed) {
+        continue;
+      }
+      const jobId = `id-${track.id}`;
+      await this.trackSearchQueue.remove(jobId);
+      await this.trackDownloadQueue.remove(jobId);
+      await this.update(track.id, {
+        ...track,
+        status: TrackStatusEnum.Error,
+        error: `${STOPPED_ERROR_PREFIX} at ${new Date().toISOString()}`,
+      });
+    }
   }
 }

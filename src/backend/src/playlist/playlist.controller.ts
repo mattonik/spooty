@@ -41,4 +41,9 @@ export class PlaylistController {
   retryFailedOfPlaylist(@Param('id') id: number): Promise<void> {
     return this.service.retryFailedOfPlaylist(id);
   }
+
+  @Post('stop/:id')
+  stop(@Param('id') id: number): Promise<void> {
+    return this.service.stopProcessing(id);
+  }
 }
