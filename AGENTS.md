@@ -16,7 +16,7 @@ Spooty is a self-hosted Spotify downloader. It uses Spotify metadata to find tra
 - Accepts Spotify playlist or track URLs; auto-detects single-track vs playlist (SpotifyApiService.isTrackUrl).
 - Pulls Spotify metadata and playlist tracks via Spotify API; falls back to `spotify-url-info` when needed.
 - Searches YouTube (yt-search) for each track and queues downloads via BullMQ.
-- Downloads audio using `ytdlp-nodejs`, writes ID3 tags and cover art via `node-id3`.
+- Downloads audio using `ytdlp-nodejs` (https://iqbal-rashed.github.io/ytdlp-nodejs/api/ytdlp-class.html), writes ID3 tags and cover art via `node-id3`.
 - Stores download files under DOWNLOADS_PATH, with per‑playlist folders and safe filenames.
 - Tracks status lifecycle: New → Searching → Queued → Downloading → Completed/Error.
 - Retry failed tracks and delete tracks/playlists.
@@ -37,3 +37,8 @@ Spooty is a self-hosted Spotify downloader. It uses Spotify metadata to find tra
 1. Track search job runs → YouTube URL discovered → download job queued.
 1. Download job runs → audio saved → status updated.
 1. WebSocket events update frontend lists and progress instantly.
+
+## Resources
+
+- https://www.devkantkumar.com/blog/yt-dlp-ultimate-guide-2026#authentication
+- https://iqbal-rashed.github.io/ytdlp-nodejs/api/ytdlp-class.html
