@@ -114,6 +114,7 @@ Some behaviour and settings of Spooty can be configured using environment variab
  SPOTIFY_CLIENT_ID    | your_client_id                              | Client ID of your Spotify application (required)                                                                                                                  |
  SPOTIFY_CLIENT_SECRET| your_client_secret                          | Client Secret of your Spotify application (required)                                                                                                              |
  YT_DOWNLOADS_PER_MINUTE | 3                                           | Set the maximum number of YouTube downloads started per minute                                                                                                  |
+ YT_DOWNLOAD_TIMEOUT_MS | 1200000                                    | Maximum time (ms) allowed for a YouTube download before marking the track as error                                                                              |
  YT_COOKIES           |                                             | Allows you to pass your YouTube cookies to bypass some download restrictions. See [below](#how-to-get-your-youtube-cookies) for instructions.                   |
 
 ### How to get your YouTube cookies (using browser dev tools):

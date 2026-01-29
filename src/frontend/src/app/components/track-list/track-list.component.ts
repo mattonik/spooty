@@ -30,4 +30,8 @@ export class TrackListComponent {
   retry(id: number): void {
     this.service.retry(id);
   }
+
+  forceFail(id: number): void {
+    this.service.forceFail(id);
+  }
 }

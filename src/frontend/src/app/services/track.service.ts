@@ -60,6 +60,10 @@ export class TrackService {
     this.http.get(`${ENDPOINT}/retry/${id}`).subscribe();
   }
 
+  forceFail(id: number): void {
+    this.http.post(`${ENDPOINT}/fail/${id}`, {}).subscribe();
+  }
+
   private initWsConnection(): void {
     this.socket.on(WsTrackOperation.Update, (track: Track) => this.store.update(upsertEntities(track)));
     this.socket.on(WsTrackOperation.Delete, ({id}: {id: number}) => this.store.update(deleteEntities(id)));

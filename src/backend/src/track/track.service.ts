@@ -18,6 +18,7 @@ enum WsTrackOperation {
   Update = 'trackUpdate',
   Delete = 'trackDelete',
 }
+const FORCED_ERROR_PREFIX = 'Forced failure by user';
 
 @WebSocketGateway()
 @Injectable()
@@ -134,13 +135,46 @@ export class TrackService {
     let error: string;
     try {
       const folderName = this.getFolderName(track, track.playlist);
-      await this.youtubeService.downloadAndFormat(track, folderName);
+      const timeoutMs = Number(process.env.YT_DOWNLOAD_TIMEOUT_MS || 20 * 60 * 1000);
+      const runWithTimeout = async <T>(
+        operation: Promise<T>,
+        label: string,
+      ): Promise<T> => {
+        if (!timeoutMs || Number.isNaN(timeoutMs) || timeoutMs <= 0) {
+          return operation;
+        }
+        let timeoutId: NodeJS.Timeout | undefined;
+        const timeoutPromise = new Promise<T>((_, reject) => {
+          timeoutId = setTimeout(
+            () =>
+              reject(
+                new Error(`${label} timed out after ${timeoutMs}ms`),
+              ),
+            timeoutMs,
+          );
+        });
+        try {
+          return await Promise.race([operation, timeoutPromise]);
+        } finally {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
+        }
+      };
+
+      await runWithTimeout(
+        this.youtubeService.downloadAndFormat(track, folderName),
+        'YouTube download',
+      );
       if (coverUrl) {
-        await this.youtubeService.addImage(
-          folderName,
-          coverUrl,
-          track.name,
-          track.artist,
+        await runWithTimeout(
+          this.youtubeService.addImage(
+            folderName,
+            coverUrl,
+            track.name,
+            track.artist,
+          ),
+          'Cover art fetch',
         );
       }
     } catch (err) {
@@ -152,6 +186,14 @@ export class TrackService {
       status: error ? TrackStatusEnum.Error : TrackStatusEnum.Completed,
       ...(error ? { error } : {}),
     };
+    const latest = await this.get(track.id);
+    if (
+      latest?.status === TrackStatusEnum.Error &&
+      typeof latest?.error === 'string' &&
+      latest.error.startsWith(FORCED_ERROR_PREFIX)
+    ) {
+      return;
+    }
     await this.update(track.id, updatedTrack);
   }
 
@@ -176,5 +218,17 @@ export class TrackService {
       this.utilsService.getPlaylistFolderPath(safePlaylistName),
       this.getTrackFileName(track),
     );
+  }
+
+  async forceFail(id: number): Promise<void> {
+    const track = await this.get(id);
+    if (!track) {
+      return;
+    }
+    await this.update(id, {
+      ...track,
+      status: TrackStatusEnum.Error,
+      error: `${FORCED_ERROR_PREFIX} at ${new Date().toISOString()}`,
+    });
   }
 }

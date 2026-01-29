@@ -3,6 +3,7 @@ import {
   Delete,
   Get,
   Param,
+  Post,
   Res,
   StreamableFile,
 } from '@nestjs/common';
@@ -46,5 +47,10 @@ export class TrackController {
   @Get('retry/:id')
   retry(@Param('id') id: number): Promise<void> {
     return this.service.retry(id);
+  }
+
+  @Post('fail/:id')
+  forceFail(@Param('id') id: number): Promise<void> {
+    return this.service.forceFail(id);
   }
 }
