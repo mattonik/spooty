@@ -53,7 +53,7 @@ export class YoutubeService {
         output,
         cookies: cookiesFile,
         headers: HEADERS,
-        rawArgs: ['--remote-components', 'ejs:github'],
+        rawArgs: ['--js-runtimes', 'node:/usr/bin/node', '--remote-components', 'ejs:github'],
         onProgress: (progress) => {
           this.logger.debug(
             `${track.artist} - ${track.name}: ${progress.percentage_str}`,
