@@ -36,6 +36,9 @@ export class TrackEntity {
   @Column({ nullable: true })
   coverUrl?: string; // Track-specific album art (overrides playlist coverUrl)
 
+  @Column({ nullable: true })
+  progress?: number;
+
   @Column({ default: Date.now() })
   createdAt?: number;
 

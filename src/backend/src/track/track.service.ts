@@ -131,8 +131,10 @@ export class TrackService {
     await this.update(track.id, {
       ...track,
       status: TrackStatusEnum.Downloading,
+      progress: 0,
     });
     let error: string;
+    let lastProgress = -1;
     try {
       const folderName = this.getFolderName(track, track.playlist);
       const timeoutMs = Number(process.env.YT_DOWNLOAD_TIMEOUT_MS || 20 * 60 * 1000);
@@ -163,7 +165,26 @@ export class TrackService {
       };
 
       await runWithTimeout(
-        this.youtubeService.downloadAndFormat(track, folderName),
+        this.youtubeService.downloadAndFormat(track, folderName, async (percent) => {
+          const rounded = Math.max(0, Math.min(100, Math.floor(percent)));
+          if (rounded <= lastProgress) {
+            return;
+          }
+          const latest = await this.get(track.id);
+          if (
+            latest?.status === TrackStatusEnum.Error &&
+            typeof latest?.error === 'string' &&
+            latest.error.startsWith(FORCED_ERROR_PREFIX)
+          ) {
+            return;
+          }
+          lastProgress = rounded;
+          await this.update(track.id, {
+            ...track,
+            status: TrackStatusEnum.Downloading,
+            progress: rounded,
+          });
+        }),
         'YouTube download',
       );
       if (coverUrl) {
@@ -184,6 +205,7 @@ export class TrackService {
     const updatedTrack = {
       ...track,
       status: error ? TrackStatusEnum.Error : TrackStatusEnum.Completed,
+      ...(error ? {} : { progress: 100 }),
       ...(error ? { error } : {}),
     };
     const latest = await this.get(track.id);

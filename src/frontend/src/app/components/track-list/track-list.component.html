@@ -30,7 +30,9 @@
       <span *ngSwitchCase="trackStatuses.New" class="tag is-info">New</span>
       <span *ngSwitchCase="trackStatuses.Searching" class="tag is-warning">Searching</span>
       <span *ngSwitchCase="trackStatuses.Queued" class="tag is-warning">Queued</span>
-      <span *ngSwitchCase="trackStatuses.Downloading" class="tag is-warning">Downloading</span>
+      <span *ngSwitchCase="trackStatuses.Downloading" class="tag is-warning">
+        Downloading{{track.progress !== undefined ? ' ' + track.progress + '%' : ''}}
+      </span>
       <span *ngSwitchCase="trackStatuses.Completed" class="tag is-success">Completed</span>
       <span *ngSwitchCase="trackStatuses.Error" class="tag is-danger" [title]="track.error">Error</span>
     </ng-container>

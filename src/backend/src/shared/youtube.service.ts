@@ -32,6 +32,7 @@ export class YoutubeService {
   async downloadAndFormat(
     track: TrackEntity,
     output: string,
+    onProgress?: (percent: number) => void,
   ): Promise<void> {
     this.logger.debug(
       `Downloading ${track.artist} - ${track.name} (${track.youtubeUrl}) from YT`,
@@ -56,6 +57,14 @@ export class YoutubeService {
           this.logger.debug(
             `${track.artist} - ${track.name}: ${progress.percentage_str}`,
           );
+          const percent = Number(
+            String(progress.percentage_str || '')
+              .replace('%', '')
+              .trim(),
+          );
+          if (!Number.isNaN(percent)) {
+            onProgress?.(percent);
+          }
         },
       });
     } catch (err) {
