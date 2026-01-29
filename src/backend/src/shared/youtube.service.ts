@@ -46,6 +46,11 @@ export class YoutubeService {
       output,
       cookies: this.configService.get<string>('YT_COOKIES_FILE'),
       headers: HEADERS,
+      onProgress: (progress) => {
+        this.logger.debug(
+          `${track.artist} - ${track.name}: ${progress.percentage_str}`,
+        );
+      },
     });
     this.logger.debug(
       `Downloaded ${track.artist} - ${track.name} to ${output}`,
