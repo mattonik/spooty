@@ -20,7 +20,7 @@ export class YoutubeService {
   private readonly logger = new Logger(TrackService.name);
   private cookiesFilePath?: string;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   async findOnYoutubeOne(artist: string, name: string): Promise<string> {
     this.logger.debug(`Searching ${artist} - ${name} on YT`);
@@ -53,6 +53,7 @@ export class YoutubeService {
         output,
         cookies: cookiesFile,
         headers: HEADERS,
+        rawArgs: ['--js-runtimes', 'node:/usr/bin/node', '--remote-components', 'ejs:github'],
         onProgress: (progress) => {
           this.logger.debug(
             `${track.artist} - ${track.name}: ${progress.percentage_str}`,
