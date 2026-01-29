@@ -44,7 +44,24 @@ export class YoutubeService {
     const ytdlp = new YtDlp();
     const cookiesFile = this.getCookiesFilePath();
     try {
-      await ytdlp.downloadAsync(track.youtubeUrl, {
+      const ytdlpEmitter = ytdlp as unknown as {
+        on?: (event: string, handler: (err: unknown) => void) => void;
+        off?: (event: string, handler: (err: unknown) => void) => void;
+        removeListener?: (
+          event: string,
+          handler: (err: unknown) => void,
+        ) => void;
+      };
+      let errorHandler: ((err: unknown) => void) | undefined;
+      const errorPromise = new Promise<never>((_, reject) => {
+        if (!ytdlpEmitter.on) {
+          return;
+        }
+        errorHandler = (err: unknown) =>
+          reject(err instanceof Error ? err : new Error(String(err)));
+        ytdlpEmitter.on('error', errorHandler);
+      });
+      const downloadPromise = ytdlp.downloadAsync(track.youtubeUrl, {
         format: {
           filter: 'audioonly',
           type: this.configService.get<'m4a'>(EnvironmentEnum.FORMAT),
@@ -53,7 +70,12 @@ export class YoutubeService {
         output,
         cookies: cookiesFile,
         headers: HEADERS,
-        rawArgs: ['--js-runtimes', 'node:/usr/bin/node', '--remote-components', 'ejs:github'],
+        rawArgs: [
+          '--js-runtimes',
+          'node:/usr/bin/node',
+          '--remote-components',
+          'ejs:github',
+        ],
         onProgress: (progress) => {
           this.logger.debug(
             `${track.artist} - ${track.name}: ${progress.percentage_str}`,
@@ -68,6 +90,14 @@ export class YoutubeService {
           }
         },
       });
+      await Promise.race([downloadPromise, errorPromise]);
+      if (errorHandler) {
+        if (ytdlpEmitter.off) {
+          ytdlpEmitter.off('error', errorHandler);
+        } else if (ytdlpEmitter.removeListener) {
+          ytdlpEmitter.removeListener('error', errorHandler);
+        }
+      }
     } catch (err) {
       const message = this.normalizeDownloadError(err);
       this.logger.error(message);
@@ -132,6 +162,12 @@ export class YoutubeService {
       return (
         'YouTube download blocked (age-restricted or sign-in required). ' +
         'Provide valid cookies via YT_COOKIES or YT_COOKIES_FILE and retry.'
+      );
+    }
+    if (/signature solving failed|challenge solving failed|EJS/i.test(raw)) {
+      return (
+        'YouTube download failed due to signature/challenge solving. ' +
+        'Update yt-dlp/ytdlp-nodejs or ensure JS runtime + EJS components are available.'
       );
     }
     return raw;
