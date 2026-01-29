@@ -5,6 +5,9 @@ import { TrackService } from '../track/track.service';
 import { ConfigService } from '@nestjs/config';
 import { YtDlp } from 'ytdlp-nodejs';
 import * as yts from 'yt-search';
+import * as fs from 'fs';
+import * as os from 'os';
+import { join } from 'path';
 const NodeID3 = require('node-id3');
 
 const HEADERS = {
@@ -15,6 +18,7 @@ const HEADERS = {
 @Injectable()
 export class YoutubeService {
   private readonly logger = new Logger(TrackService.name);
+  private cookiesFilePath?: string;
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -37,21 +41,28 @@ export class YoutubeService {
       throw Error('youtubeUrl is null or undefined');
     }
     const ytdlp = new YtDlp();
-    await ytdlp.downloadAsync(track.youtubeUrl, {
-      format: {
-        filter: 'audioonly',
-        type: this.configService.get<'m4a'>(EnvironmentEnum.FORMAT),
-        quality: 0,
-      },
-      output,
-      cookies: this.configService.get<string>('YT_COOKIES_FILE'),
-      headers: HEADERS,
-      onProgress: (progress) => {
-        this.logger.debug(
-          `${track.artist} - ${track.name}: ${progress.percentage_str}`,
-        );
-      },
-    });
+    const cookiesFile = this.getCookiesFilePath();
+    try {
+      await ytdlp.downloadAsync(track.youtubeUrl, {
+        format: {
+          filter: 'audioonly',
+          type: this.configService.get<'m4a'>(EnvironmentEnum.FORMAT),
+          quality: 0,
+        },
+        output,
+        cookies: cookiesFile,
+        headers: HEADERS,
+        onProgress: (progress) => {
+          this.logger.debug(
+            `${track.artist} - ${track.name}: ${progress.percentage_str}`,
+          );
+        },
+      });
+    } catch (err) {
+      const message = this.normalizeDownloadError(err);
+      this.logger.error(message);
+      throw new Error(message);
+    }
     this.logger.debug(
       `Downloaded ${track.artist} - ${track.name} to ${output}`,
     );
@@ -82,5 +93,37 @@ export class YoutubeService {
         folderName,
       );
     }
+  }
+
+  private getCookiesFilePath(): string | undefined {
+    if (process.env.YT_COOKIES_FILE) {
+      return process.env.YT_COOKIES_FILE;
+    }
+    if (!process.env.YT_COOKIES) {
+      return undefined;
+    }
+    if (this.cookiesFilePath) {
+      return this.cookiesFilePath;
+    }
+    const tmpDir = os.tmpdir();
+    const filePath = join(tmpDir, 'spooty-yt-cookies.txt');
+    fs.writeFileSync(filePath, process.env.YT_COOKIES);
+    this.cookiesFilePath = filePath;
+    return filePath;
+  }
+
+  private normalizeDownloadError(err: unknown): string {
+    const raw = err instanceof Error ? err.message : String(err);
+    if (
+      /age|signin|sign in|account|login|confirm your age|members-only|private/i.test(
+        raw,
+      )
+    ) {
+      return (
+        'YouTube download blocked (age-restricted or sign-in required). ' +
+        'Provide valid cookies via YT_COOKIES or YT_COOKIES_FILE and retry.'
+      );
+    }
+    return raw;
   }
 }
