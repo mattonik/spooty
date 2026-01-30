@@ -26,8 +26,6 @@ RUN curl -L --fail -o /tmp/deno.zip \
   && rm /tmp/deno.zip \
   && chmod +x /usr/local/bin/deno
 
-# (Optional) EJS python helper via pip, if you prefer local scripts over remote-components
-RUN pip3 install --no-cache-dir yt-dlp-ejs
 
 # app
 COPY --from=builder /spooty/dist ./dist
