@@ -71,8 +71,6 @@ export class YoutubeService {
         cookies: cookiesFile,
         headers: HEADERS,
         rawArgs: [
-          '--js-runtimes',
-          'node:/usr/bin/node',
           '--remote-components',
           'ejs:github',
         ],

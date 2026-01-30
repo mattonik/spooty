@@ -13,8 +13,8 @@ COPY --from=builder /spooty/package-lock.json ./package-lock.json
 COPY --from=builder /spooty/src/backend/.env.docker ./.env
 RUN npm prune --production
 RUN rm -rf src package.json package-lock.json
+RUN apk add --no-cache deno ca-certificates
 RUN apk add --no-cache ffmpeg
-RUN apk add --no-cache redis
 RUN apk add --no-cache python3 py3-pip
 RUN apk add --no-cache yt-dlp
 EXPOSE 3000
