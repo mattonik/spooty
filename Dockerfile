@@ -21,11 +21,6 @@ RUN ln -s /opt/nodejs/bin/npm /usr/local/bin/npm
 # To install specific npm version, run the following command, or remove it to use the default npm version:
 RUN npm install -g npm@9.6.6
 
-COPY --from=builder /usr/lib /usr/lib
-COPY --from=builder /usr/local/lib /usr/local/lib
-COPY --from=builder /usr/local/include /usr/local/include
-COPY --from=builder /usr/local/bin /usr/local/bin
-
 COPY --from=builder /spooty/dist .
 COPY --from=builder /spooty/src ./src
 COPY --from=builder /spooty/package.json ./package.json
