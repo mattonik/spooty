@@ -7,10 +7,8 @@ RUN npm run build
 FROM alpine:latest
 
 WORKDIR /spooty
-RUN apk add --no-cache ca-certificates nvm ffmpeg python3 py3-pip deno yt-dlp curl && update-ca-certificates
+RUN apk add --no-cache ca-certificates ffmpeg python3 py3-pip deno yt-dlp curl && update-ca-certificates
 
-# set env
-ENV NVM_DIR=/root/.nvm
 ENV NODE_VERSION=18.20.4
 
 COPY --from=builder /spooty/dist .
@@ -25,7 +23,7 @@ RUN mkdir -p /spooty/backend/config/.cache
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Create a script file sourced by both interactive and non-interactive bash shells
-ENV BASH_ENV /home/user/.bash_env
+ENV BASH_ENV=/home/user/.bash_env
 RUN touch "${BASH_ENV}"
 RUN echo '. "${BASH_ENV}"' >> ~/.bashrc
 
