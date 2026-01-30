@@ -5,21 +5,25 @@ RUN npm ci
 RUN npm run build
 
 FROM alpine:latest
-ENV NODE_PACKAGE_URL=https://unofficial-builds.nodejs.org/download/release/v18.16.0/node-v18.16.0-linux-x64-musl.tar.gz
-RUN apk add libstdc++
 
 WORKDIR /spooty
-RUN apk add --no-cache ca-certificates ffmpeg python3 py3-pip deno yt-dlp wget unzip curl && update-ca-certificates
-RUN wget $NODE_PACKAGE_URL
-RUN mkdir -p /opt/nodejs
-RUN tar -zxvf *.tar.gz --directory /opt/nodejs --strip-components=1
-RUN rm *.tar.gz
-RUN ln -s /opt/nodejs/bin/node /usr/local/bin/node
-RUN ln -s /opt/nodejs/bin/npm /usr/local/bin/npm
+RUN apk add --no-cache ca-certificates ffmpeg python3 py3-pip deno yt-dlp curl && update-ca-certificates
 
-# npm version coming with node is 9.5.1
-# To install specific npm version, run the following command, or remove it to use the default npm version:
-RUN npm install -g npm@9.6.6
+# install nvm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
+
+# set env
+ENV NVM_DIR=/root/.nvm
+ENV NODE_VERSION=18.20.4
+
+# install node
+RUN bash -c "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION"
+
+# set ENTRYPOINT for reloading nvm-environment
+ENTRYPOINT ["bash", "-c", "source $NVM_DIR/nvm.sh && exec \"$@\"", "--"]
+
+# set cmd to bash
+CMD ["/bin/bash"]
 
 COPY --from=builder /spooty/dist .
 COPY --from=builder /spooty/src ./src
