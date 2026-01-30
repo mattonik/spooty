@@ -1,21 +1,37 @@
+FROM node:18.20.4-alpine AS deps
+WORKDIR /spooty
+COPY package*.json ./
+RUN npm ci
+
 FROM node:18.20.4-alpine AS builder
 WORKDIR /spooty
+COPY --from=deps /spooty/node_modules ./node_modules
 COPY . .
-RUN npm ci
 RUN npm run build
 
-FROM node:18.20.4-alpine
+FROM node:18.20.4-alpine AS runtime
 WORKDIR /spooty
-COPY --from=builder /spooty/dist .
-COPY --from=builder /spooty/src ./src
+
+# OS deps for yt-dlp + EJS + transcoding
+RUN apk add --no-cache \
+    ca-certificates \
+    deno \
+    ffmpeg \
+    python3 \
+    yt-dlp \
+    tini
+
+# Copy compiled output + prod dependencies
+COPY --from=builder /spooty/dist ./dist
+COPY --from=builder /spooty/node_modules ./node_modules
 COPY --from=builder /spooty/package.json ./package.json
-COPY --from=builder /spooty/package-lock.json ./package-lock.json
 COPY --from=builder /spooty/src/backend/.env.docker ./.env
-RUN npm prune --production
-RUN rm -rf src package.json package-lock.json
-RUN apk add --no-cache deno ca-certificates
-RUN apk add --no-cache ffmpeg
-RUN apk add --no-cache python3 py3-pip
-RUN apk add --no-cache yt-dlp
+
+# (Optional) if your runtime expects backend/main.js specifically:
+# If dist already contains backend/main.js, you can run from dist.
+# Otherwise, ensure the correct entry exists.
+ENV NODE_ENV=production
+
 EXPOSE 3000
-CMD ["node", "backend/main.js"]
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "dist/backend/main.js"]
