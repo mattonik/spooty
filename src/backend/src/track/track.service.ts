@@ -40,7 +40,7 @@ export class TrackService {
     private readonly configService: ConfigService,
     private readonly utilsService: UtilsService,
     private readonly youtubeService: YoutubeService,
-  ) {}
+  ) { }
 
   getAll(
     where?: { [key: string]: any },
@@ -76,6 +76,9 @@ export class TrackService {
   async update(id: number, track: TrackEntity): Promise<void> {
     await this.repository.update(id, track);
     this.io.emit(WsTrackOperation.Update, track);
+    this.logger.debug(
+      `Updating track ${track.id}: status=${TrackStatusEnum[track.status]}`,
+    );
   }
 
   async retry(id: number): Promise<void> {
@@ -107,9 +110,15 @@ export class TrackService {
         status: TrackStatusEnum.Error,
       };
     }
+    this.logger.debug(
+      `Adding track ${updatedTrack.id} to download queue`,
+    );
     await this.trackDownloadQueue.add('', updatedTrack, {
       jobId: `id-${updatedTrack.id}`,
     });
+    this.logger.debug(
+      `Added track ${updatedTrack.id} to download queue`,
+    );
     await this.update(track.id, updatedTrack);
   }
 
@@ -232,7 +241,7 @@ export class TrackService {
         this.getTrackFileName(track),
       );
     }
-    
+
     const safePlaylistName = playlist?.name || 'unknown_playlist';
     return resolve(
       this.utilsService.getPlaylistFolderPath(safePlaylistName),

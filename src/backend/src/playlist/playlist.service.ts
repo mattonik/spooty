@@ -29,7 +29,7 @@ export class PlaylistService {
     private readonly trackService: TrackService,
     private readonly utilsService: UtilsService,
     private readonly spotifyService: SpotifyService,
-  ) {}
+  ) { }
 
   findAll(
     relations: Record<string, boolean> = { tracks: true },
@@ -167,8 +167,7 @@ export class PlaylistService {
           }
         } catch (error) {
           this.logger.error(
-            `Error creating track "${
-              track?.artist || 'Unknown'
+            `Error creating track "${track?.artist || 'Unknown'
             } - ${track?.name || 'Unknown'}": ${error.message}`,
           );
           errorCount++;
@@ -177,7 +176,7 @@ export class PlaylistService {
 
       this.logger.debug(
         `Finished processing playlist ${savedPlaylist.name}: ` +
-          `${processedCount} tracks processed, ${skippedCount} skipped, ${errorCount} errors`,
+        `${processedCount} tracks processed, ${skippedCount} skipped, ${errorCount} errors`,
       );
     } else {
       this.logger.warn(`No tracks found for playlist ${savedPlaylist.name}`);
@@ -194,6 +193,9 @@ export class PlaylistService {
     await this.repository.update(id, playlist);
     const dbPlaylist = await this.findOne(id);
     this.io.emit(WsPlaylistOperation.Update, dbPlaylist);
+    this.logger.debug(
+      `Updated playlist ${dbPlaylist.id}: active=${dbPlaylist.active}`,
+    );
   }
 
   async stopProcessing(id: number): Promise<void> {
