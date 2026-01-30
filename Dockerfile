@@ -1,6 +1,5 @@
-FROM node:18.20.4-alpine AS deps
+FROM node:18.20.4-alpine AS builder
 WORKDIR /spooty
-RUN apk add --no-cache nodejs npm
 COPY . .
 RUN npm ci
 RUN npm run build
