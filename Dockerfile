@@ -19,10 +19,10 @@ COPY --from=builder /spooty/src/backend/.env.docker ./.env
 
 RUN mkdir -p /spooty/backend/config/.cache
 
-ENV NPM_CONFIG_PRODUCTION=true
-ENV NODE_ENV=production
+# ENV NPM_CONFIG_PRODUCTION=true
+# ENV NODE_ENV=production
 
-RUN npm prune --production
+# RUN npm prune --production
 RUN rm -rf src package.json package-lock.json
 EXPOSE 3000
 CMD ["node", "backend/main.js"]
