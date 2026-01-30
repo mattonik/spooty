@@ -33,6 +33,8 @@ RUN echo node > .nvmrc
 RUN nvm install
 RUN nvm use node@18.20.4
 
+RUN node -v
+RUN npm -v
 RUN npm prune --production
 RUN rm -rf src package.json package-lock.json
 EXPOSE 3000
