@@ -1,7 +1,7 @@
 FROM node:18.20.4-alpine AS builder
 WORKDIR /spooty
 COPY . .
-RUN npm ci --omit=dev
+RUN npm ci
 RUN npm run build
 
 FROM alpine:latest
