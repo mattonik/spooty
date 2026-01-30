@@ -6,12 +6,12 @@ RUN npm run build
 
 FROM alpine:latest
 WORKDIR /spooty
+RUN apk add --no-cache ca-certificates ffmpeg python3 deno yt-dlp
+
 COPY --from=builder /usr/lib /usr/lib
 COPY --from=builder /usr/local/lib /usr/local/lib
 COPY --from=builder /usr/local/include /usr/local/include
 COPY --from=builder /usr/local/bin /usr/local/bin
-
-RUN apk add --no-cache ca-certificates ffmpeg python3 deno yt-dlp
 
 COPY --from=builder /spooty/dist .
 COPY --from=builder /spooty/src ./src
