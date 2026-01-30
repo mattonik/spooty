@@ -12,7 +12,7 @@ FROM node:18.20.4-alpine
 WORKDIR /spooty
 
 # system deps
-RUN apk add --no-cache ca-certificates curl ffmpeg python3
+RUN apk add --no-cache ca-certificates curl ffmpeg python3 py3-pip unzip
 
 # Install upstream yt-dlp (Pi 5 = aarch64)
 RUN curl -L --fail -o /usr/local/bin/yt-dlp \
