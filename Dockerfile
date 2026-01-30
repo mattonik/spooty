@@ -11,7 +11,7 @@ COPY --from=builder /spooty/src ./src
 COPY --from=builder /spooty/package.json ./package.json
 COPY --from=builder /spooty/package-lock.json ./package-lock.json
 COPY --from=builder /spooty/src/backend/.env.docker ./.env
-RUN apk add --no-cache ca-certificates ffmpeg python3 yt-dlp curl unzip
+RUN apk add --no-cache ca-certificates ffmpeg python3 curl unzip
 
 # Install upstream yt-dlp (Pi 5 = aarch64)
 RUN curl -L --fail -o /usr/local/bin/yt-dlp \
