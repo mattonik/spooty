@@ -43,16 +43,17 @@ export class YoutubeService {
     }
     const ytdlp = new YtDlp();
     const cookiesFile = this.getCookiesFilePath();
+    const rawArgs = this.buildYtdlpArgs();
+    const ytdlpEmitter = ytdlp as unknown as {
+      on?: (event: string, handler: (err: unknown) => void) => void;
+      off?: (event: string, handler: (err: unknown) => void) => void;
+      removeListener?: (
+        event: string,
+        handler: (err: unknown) => void,
+      ) => void;
+    };
+    let errorHandler: ((err: unknown) => void) | undefined;
     try {
-      const ytdlpEmitter = ytdlp as unknown as {
-        on?: (event: string, handler: (err: unknown) => void) => void;
-        off?: (event: string, handler: (err: unknown) => void) => void;
-        removeListener?: (
-          event: string,
-          handler: (err: unknown) => void,
-        ) => void;
-      };
-      let errorHandler: ((err: unknown) => void) | undefined;
       const errorPromise = new Promise<never>((_, reject) => {
         if (!ytdlpEmitter.on) {
           return;
@@ -70,11 +71,7 @@ export class YoutubeService {
         output,
         cookies: cookiesFile,
         headers: HEADERS,
-        jsRuntime: 'deno',
-        rawArgs: [
-          '--remote-components',
-          'ejs:github',
-        ],
+        rawArgs,
         onProgress: (progress) => {
           this.logger.debug(
             `${track.artist} - ${track.name}: ${progress.percentage_str}`,
@@ -90,6 +87,11 @@ export class YoutubeService {
         },
       });
       await Promise.race([downloadPromise, errorPromise]);
+    } catch (err) {
+      const message = this.normalizeDownloadError(err);
+      this.logger.error(message);
+      throw new Error(message);
+    } finally {
       if (errorHandler) {
         if (ytdlpEmitter.off) {
           ytdlpEmitter.off('error', errorHandler);
@@ -97,10 +99,6 @@ export class YoutubeService {
           ytdlpEmitter.removeListener('error', errorHandler);
         }
       }
-    } catch (err) {
-      const message = this.normalizeDownloadError(err);
-      this.logger.error(message);
-      throw new Error(message);
     }
     this.logger.debug(
       `Downloaded ${track.artist} - ${track.name} to ${output}`,
@@ -170,5 +168,14 @@ export class YoutubeService {
       );
     }
     return raw;
+  }
+
+  private buildYtdlpArgs(): string[] {
+    return [
+      '--js-runtimes',
+      'deno:/usr/bin/deno',
+      '--remote-components',
+      'ejs:github',
+    ];
   }
 }

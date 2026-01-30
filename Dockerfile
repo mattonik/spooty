@@ -27,6 +27,7 @@ FROM node:18.20.4-alpine AS runtime
 WORKDIR /spooty
 
 RUN apk add --no-cache ca-certificates deno ffmpeg python3 yt-dlp tini
+RUN mkdir -p /spooty/backend/config/.cache
 
 # Copy compiled output + runtime deps
 COPY --from=builder /spooty/dist ./dist
@@ -35,6 +36,7 @@ COPY --from=builder /spooty/package.json ./package.json
 COPY --from=builder /spooty/src/backend/.env.docker ./.env
 
 ENV NODE_ENV=production
+ENV XDG_CACHE_HOME=/spooty/backend/config/.cache
 EXPOSE 3000
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "dist/backend/main.js"]
