@@ -70,6 +70,7 @@ export class YoutubeService {
         output,
         cookies: cookiesFile,
         headers: HEADERS,
+        jsRuntime: 'deno',
         rawArgs: [
           '--remote-components',
           'ejs:github',
