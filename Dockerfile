@@ -7,6 +7,7 @@ FROM node:18.20.4-alpine AS builder
 WORKDIR /spooty
 COPY --from=deps /spooty/node_modules ./node_modules
 COPY . .
+RUN npm i -g @nestjs/cli
 RUN npm run build
 
 FROM node:18.20.4-alpine AS runtime
