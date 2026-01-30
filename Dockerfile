@@ -7,23 +7,11 @@ RUN npm run build
 FROM alpine:latest
 
 WORKDIR /spooty
-RUN apk add --no-cache ca-certificates ffmpeg python3 py3-pip deno yt-dlp curl && update-ca-certificates
-
-# install nvm
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
+RUN apk add --no-cache ca-certificates nodejs ffmpeg python3 py3-pip deno yt-dlp curl && update-ca-certificates
 
 # set env
 ENV NVM_DIR=/root/.nvm
 ENV NODE_VERSION=18.20.4
-
-# install node
-RUN bash -c "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION"
-
-# set ENTRYPOINT for reloading nvm-environment
-ENTRYPOINT ["bash", "-c", "source $NVM_DIR/nvm.sh && exec \"$@\"", "--"]
-
-# set cmd to bash
-CMD ["/bin/bash"]
 
 COPY --from=builder /spooty/dist .
 COPY --from=builder /spooty/src ./src
